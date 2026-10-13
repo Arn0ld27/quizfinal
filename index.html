@@ -535,7 +535,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = 'https://bdcyupvtqtrgbdtykqar.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_cUgD8tU1mrJ7ltTXaHFjxw_cEosfq61'; 
 const TABLE_NAME = 'quiz_scores';
-const TIME_PER_QUESTION = 30; // Fixed na 30s
+const TIME_PER_QUESTION = 25; // Fixed na 30s
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -898,11 +898,11 @@ function endQuiz() {
 
   let msg = '';
   let trophy = '🎉';
-  if (percent === 100) { msg = '🏆 Perfect! Design Master ka!'; trophy = '🏆'; fireConfetti(); }
+  if (percent === 100) { msg = '🏆 Perfect! Batak!'; trophy = '🏆'; fireConfetti(); }
   else if (percent >= 80) { msg = '🌟 Excellent! Magaling ka!'; trophy = '🌟'; }
-  else if (percent >= 60) { msg = '👍 Good job! Keep practicing!'; trophy = '👍'; }
+  else if (percent >= 60) { msg = '👍 Good job!'; trophy = '👍'; }
   else if (percent >= 40) { msg = '📚 Not bad! Review pa konti.'; trophy = '📚'; }
-  else { msg = '💪 Try again! Practice makes perfect.'; trophy = '💪'; }
+  else { msg = ' Try again! Practice makes perfect.'; trophy = '💪'; }
 
   document.getElementById('trophyIcon').textContent = trophy;
   document.getElementById('resultMessage').textContent = msg;
