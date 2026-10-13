@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Design Quiz Bee</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    /* Mobile-only: max width ng phone */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* Phone frame — sa desktop, lalabas na parang phone */
+  .phone-frame {
+    width: 100%;
+    max-width: 430px;
+    height: 100vh;
+    max-height: 932px;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (min-width: 500px) {
+    body { padding: 20px; }
+    .phone-frame { border-radius: 32px; height: calc(100vh - 40px); }
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 24px 20px 20px;
+    animation: fadeIn 0.35s ease;
+  }
+
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  h1 {
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    font-size: 14px;
+  }
+
+  /* Start Screen */
+  .start-screen {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .logo-icon {
+    font-size: 80px;
+    margin-bottom: 12px;
+    animation: pop 0.6s ease;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    transition: border 0.2s;
+    background: var(--bg);
+    text-align: center;
+  }
+
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+
+  button {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    padding: 16px 24px;
+    font-size: 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+  }
+
+  button:hover:not(:disabled) { transform: translateY(-2px); }
+  button:active:not(:disabled) { transform: translateY(0); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+  button.secondary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  }
+
+  button.ghost {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: none;
+    border: 2px solid var(--border);
+  }
+
+  button.ghost:hover:not(:disabled) { background: var(--border); box-shadow: none; }
+
+  /* Quiz Screen */
+  .quiz-header {
+    flex-shrink: 0;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .timer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--danger);
+    background: #fef2f2;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .timer.warning { animation: shake 0.5s infinite; }
+
+  .question-badge {
+    display: inline-block;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .badge-mc { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .badge-tf { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .badge-id { background: linear-gradient(135deg, #10b981, #059669); }
+
+  .question {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.5;
+    animation: slideIn 0.3s ease;
+  }
+
+  .quiz-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
+  .quiz-footer {
+    flex-shrink: 0;
+    padding-top: 12px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Options */
+  .option {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+    user-select: none;
+    min-height: 56px;
+  }
+
+  .option:active { transform: scale(0.98); }
+
+  .option .letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    background: white;
+    border-radius: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .option.selected {
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    border-color: var(--primary);
+  }
+  .option.selected .letter { background: var(--primary); color: white; }
+  .option.correct { background: #d1fae5; border-color: var(--success); }
+  .option.correct .letter { background: var(--success); color: white; }
+  .option.wrong { background: #fee2e2; border-color: var(--danger); }
+  .option.wrong .letter { background: var(--danger); color: white; }
+  .option.disabled { pointer-events: none; }
+
+  /* True/False */
+  .tf-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .tf-btn {
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.15s;
+    text-align: center;
+    color: var(--text);
+    min-height: 80px;
+  }
+
+  .tf-btn:active { transform: scale(0.97); }
+  .tf-btn.selected {
+    background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+  }
+  .tf-btn.correct { background: #d1fae5; border-color: var(--success); color: #065f46; }
+  .tf-btn.wrong { background: #fee2e2; border-color: var(--danger); color: #991b1b; }
+  .tf-btn.disabled { pointer-events: none; }
+
+  /* Identification */
+  .blank-input {
+    width: 100%;
+    padding: 20px 16px;
+    font-size: 18px;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg);
+    margin-bottom: 16px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+
+  .blank-input:focus { outline: none; border-color: var(--primary); background: white; }
+  .blank-input.correct { border-color: var(--success); background: #d1fae5; color: #065f46; }
+  .blank-input.wrong { border-color: var(--danger); background: #fee2e2; color: #991b1b; }
+
+  /* Result Screen */
+  .result-screen { text-align: center; justify-content: center; }
+
+  .trophy-icon { font-size: 80px; margin-bottom: 8px; animation: pop 0.5s ease; }
+  .score-big {
+    font-size: 80px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 8px 0;
+    line-height: 1;
+  }
+
+  .score-label { color: var(--text-muted); font-size: 15px; margin-bottom: 16px; }
+  .message { font-size: 18px; color: var(--text); margin-bottom: 20px; font-weight: 600; }
+
+  .saved-msg {
+    min-height: 24px;
+    padding: 12px;
+    border-radius: 10px;
+    margin: 16px 0;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .saved-msg.success { color: #065f46; background: #d1fae5; }
+  .saved-msg.error { color: #991b1b; background: #fee2e2; }
+  .saved-msg.loading { color: var(--primary-dark); background: #e0e7ff; }
+
+  /* Review */
+  .review-section {
+    text-align: left;
+    margin: 16px 0;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+
+  .review-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--danger);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .review-item.correct { border-left-color: var(--success); }
+  .review-q { font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .review-answer { color: var(--text-muted); font-size: 12px; }
+  .review-answer .correct-ans { color: var(--success); font-weight: 600; }
+  .review-answer .your-ans { color: var(--danger); font-weight: 600; }
+
+  /* Leaderboard */
+  .leaderboard-list { list-style: none; text-align: left; }
+  .leaderboard-list li {
+    background: var(--bg);
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .leaderboard-list li.top1 { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .leaderboard-list li.top2 { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
+  .leaderboard-list li.top3 { background: linear-gradient(135deg, #fed7aa, #fdba74); }
+
+  .rank { font-weight: 800; min-width: 32px; color: var(--primary-dark); font-size: 16px; }
+  .lb-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-score { font-weight: 700; color: var(--success); font-size: 13px; }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    z-index: 999;
+    animation: confetti-fall linear forwards;
+    pointer-events: none;
+  }
+
+  @keyframes confetti-fall {
+    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Small phones */
+  @media (max-height: 700px) {
+    h1 { font-size: 26px; }
+    .logo-icon { font-size: 60px; }
+    .score-big { font-size: 64px; }
+    .trophy-icon { font-size: 64px; }
+    .question { font-size: 16px; }
+    .option { padding: 14px; font-size: 14px; min-height: 50px; }
+    .tf-btn { padding: 20px 10px; font-size: 16px; min-height: 70px; }
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- ============ START SCREEN ============ -->
+  <div class="screen start-screen active">
+    <div class="logo-icon">🎨</div>
+    <h1>Design Quiz Bee</h1>
+    <p class="subtitle">Test your design knowledge!</p>
+    
+    <input type="text" id="playerName" placeholder="Enter your name..." maxlength="30" autocomplete="off">
+    <button onclick="startQuiz()">Start Quiz </button>
+    <button class="ghost" onclick="showLeaderboard()"> View Leaderboard</button>
+  </div>
+
+  <!-- ============ QUIZ SCREEN ============ -->
+  <div class="screen quiz-screen">
+    <div class="quiz-header">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="header-info">
+        <span id="progress">Q 1/20</span>
+        <span class="timer" id="timer">⏱ 30s</span>
+      </div>
+    </div>
+
+    <div class="quiz-body" id="quizBody">
+      <div id="questionTypeBadge" class="question-badge badge-mc">Multiple Choice</div>
+      <div class="question" id="questionText"></div>
+      <div id="answerContainer"></div>
+    </div>
+
+    <div class="quiz-footer">
+      <button id="submitBtn" onclick="submitAnswer()" disabled>Submit Answer ✓</button>
+      <button id="nextBtn" class="secondary" onclick="nextQuestion()" style="display:none;">Next →</button>
+    </div>
+  </div>
+
+  <!-- ============ RESULT SCREEN ============ -->
+  <div class="screen result-screen">
+    <div class="trophy-icon" id="trophyIcon">🎉</div>
+    <h2 style="color: var(--primary-dark); margin-bottom: 4px;">Quiz Complete!</h2>
+    <p id="resultName" style="color: var(--text-muted); font-size: 14px;"></p>
+    <div class="score-big" id="finalScore">0</div>
+    <p class="score-label" id="scorePercent">0%</p>
+    <p class="message" id="resultMessage"></p>
+    <div class="saved-msg" id="savedMsg"></div>
+    
+    <div class="review-section" id="reviewSection" style="display:none;"></div>
+    
+    <button class="ghost" onclick="toggleReview()" id="reviewBtn">📖 Show Review</button>
+    <button class="secondary" onclick="showLeaderboard()">🏆 Leaderboard</button>
+    <button class="ghost" onclick="location.reload()">🔄 Try Again</button>
+  </div>
+
+  <!-- ============ LEADERBOARD SCREEN ============ -->
+  <div class="screen leaderboard-screen">
+    <h1 style="font-size: 26px;">🏆 Top 10 Scores</h1>
+    <ul class="leaderboard-list" id="leaderboardList" style="margin: 20px 0;">
+      <li>⏳ Loading...</li>
+    </ul>
+    <button class="ghost" onclick="location.reload()">⬅ Back to Start</button>
+  </div>
+
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// ============================================================
+
+// ============================================================
+const SUPABASE_URL = 'https://bdcyupvtqtrgbdtykqar.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_cUgD8tU1mrJ7ltTXaHFjxw_cEosfq61'; 
+const TABLE_NAME = 'quiz_scores';
+const TIME_PER_QUESTION = 30; // Fixed na 30s
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
+//  📚 QUESTIONS DATABASE (20 items lang — walang code)
+// ============================================================
+const allQuestions = [
+  // ============ MULTIPLE CHOICE (10) ============
+  {
+    type: 'multiple_choice',
+    q: 'Which of the following is NOT one of the basic elements of design discussed in the module?',
+    options: ['Line', 'Shape', 'Perspective', 'Texture'],
+    answer: 2
+  },
+  {
+    type: 'multiple_choice',
+    q: 'Freeform, irregular shapes that do not follow a mathematical structure are classified as what type of shape?',
+    options: ['Geometric', 'Organic', 'Symmetrical', 'Tertiary'],
+    answer: 1
+  },
+  {
+    type: 'multiple_choice',
+    q: 'What visual element creates depth and volume, making a flat, two-dimensional shape appear three-dimensional?',
+    options: ['Texture', 'Form', 'Contrast', 'Balance'],
+    answer: 1
+  },
+  {
+    type: 'multiple_choice',
+    q: 'A composition in which the two sides contain different elements but still have a similar overall visual weight demonstrates what type of balance?',
+    options: ['Symmetrical balance', 'Radial balance', 'Asymmetrical balance', 'Monochromatic balance'],
+    answer: 2
+  },
+  {
+    type: 'multiple_choice',
+    q: 'Which type of graphic can be enlarged without losing quality or becoming pixelated?',
+    options: ['Raster', 'Vector', 'Bictor', 'Rasta'],
+    answer: 1
+  },
+  {
+    type: 'multiple_choice',
+    q: 'Pairing a light-colored foreground element with a dark-colored background is an example of which design principle?',
+    options: ['Repetition', 'Contrast', 'White space', 'Proximity'],
+    answer: 1
+  },
+  {
+    type: 'multiple_choice',
+    q: 'Using the same color palette and text style across every slide of a presentation to create consistency applies which design principle?',
+    options: ['Contrast', 'Repetition', 'Alignment', 'Balance'],
+    answer: 1
+  },
+  {
+    type: 'multiple_choice',
+    q: 'Which font category features small decorative strokes, or "serifs," at the ends of letters and is commonly associated with traditional, formal, and authoritative designs?',
+    options: ['Serif', 'Display', 'Sans serif', 'Blackletter'],
+    answer: 0
+  },
+  {
+    type: 'multiple_choice',
+    q: 'What does CMYK stand for?',
+    options: ['Cyan, Magenta, Yellow, Key/Black', 'Cyan, Maroon, Yellow, Key', 'Cyan, Magenta, Yellow, Khaki', 'Cyan, Medium, Yellow, Key'],
+    answer: 0
+  },
+  {
+    type: 'multiple_choice',
+    q: 'What does PNG stand for?',
+    options: ['Portable Network Graphics', 'Personal Network Graphic', 'Portable Numeric Graphics', 'Pixel Network Graphic'],
+    answer: 0
+  },
+
+  // ============ TRUE OR FALSE (5) ============
+  { type: 'true_false', q: 'Graphic design is a form of visual communication.', answer: true },
+  { type: 'true_false', q: 'Asymmetrical balance requires identical elements on both sides of a composition.', answer: false },
+  { type: 'true_false', q: 'Branding and visual identity have exactly the same meaning.', answer: false },
+  { type: 'true_false', q: 'Red, Yellow, and Blue are a set of secondary colors.', answer: false },
+  { type: 'true_false', q: 'CMYK is commonly associated with print production.', answer: true },
+
+  // ============ IDENTIFICATION (5) ============
+  {
+    type: 'identification',
+    q: 'Which color mode, consisting of Red, Green, and Blue, is intended for designs displayed on digital screens?',
+    answer: 'RGB',
+    accepted: ['rgb', 'r.g.b', 'red green blue', 'red, green, blue']
+  },
+  {
+    type: 'identification',
+    q: 'Grouping related elements together while separating unrelated elements describes which layout principle?',
+    answer: 'Proximity',
+    accepted: ['proximity', 'proximity principle']
+  },
+  {
+    type: 'identification',
+    q: 'Which layout principle organizes elements along common lines, such as left, center, right, or justified?',
+    answer: 'Alignment',
+    accepted: ['alignment', 'align']
+  },
+  {
+    type: 'identification',
+    q: 'What type of shapes are based on regular forms such as circles, squares, and triangles?',
+    answer: 'Geometric',
+    accepted: ['geometric', 'geometric shapes']
+  },
+  {
+    type: 'identification',
+    q: 'Which font category features small strokes at the ends of letters and is typically associated with formal or traditional designs?',
+    answer: 'Serif',
+    accepted: ['serif', 'serif font']
+  }
+];
+
+// ============================================================
+//  🎮 STATE
+// ============================================================
+let questions = [];
+let currentQ = 0;
+let score = 0;
+let playerName = '';
+let timerInterval;
+let timeLeft;
+let selectedAnswer = null;
+let answered = false;
+let userAnswers = [];
+
+// ============================================================
+//  🎬 START
+// ============================================================
+window.startQuiz = function() {
+  playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
+  questions = [...allQuestions];
+  
+  currentQ = 0;
+  score = 0;
+  userAnswers = [];
+  
+  showScreen('quiz-screen');
+  loadQuestion();
+};
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelector('.' + name).classList.add('active');
+}
+
+// ============================================================
+//  📝 LOAD QUESTION
+// ============================================================
+function loadQuestion() {
+  if (currentQ >= questions.length) {
+    endQuiz();
+    return;
+  }
+
+  answered = false;
+  selectedAnswer = null;
+  const q = questions[currentQ];
+
+  document.getElementById('progress').textContent = `Q ${currentQ + 1}/${questions.length}`;
+  document.getElementById('progressFill').style.width = `${(currentQ / questions.length) * 100}%`;
+
+  // Question type badge
+  const badges = {
+    multiple_choice: { text: 'Multiple Choice', cls: 'badge-mc' },
+    true_false: { text: 'True or False', cls: 'badge-tf' },
+    identification: { text: 'Identification', cls: 'badge-id' }
+  };
+  const badge = badges[q.type];
+  const badgeEl = document.getElementById('questionTypeBadge');
+  badgeEl.textContent = badge.text;
+  badgeEl.className = 'question-badge ' + badge.cls;
+
+  document.getElementById('questionText').textContent = q.q;
+
+  document.getElementById('submitBtn').style.display = 'block';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const container = document.getElementById('answerContainer');
+  container.innerHTML = '';
+
+  if (q.type === 'multiple_choice') {
+    q.options.forEach((opt, i) => {
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.innerHTML = `<span class="letter">${String.fromCharCode(65 + i)}</span><span>${escapeHtml(opt)}</span>`;
+      div.onclick = () => selectOption(i, div);
+      container.appendChild(div);
+    });
+  } 
+  else if (q.type === 'true_false') {
+    const tf = document.createElement('div');
+    tf.className = 'tf-container';
+    tf.innerHTML = `
+      <button class="tf-btn" data-val="true">✓ TRUE</button>
+      <button class="tf-btn" data-val="false">✗ FALSE</button>
+    `;
+    container.appendChild(tf);
+    tf.querySelectorAll('.tf-btn').forEach(btn => {
+      btn.onclick = () => selectTF(btn.dataset.val === 'true', btn);
+    });
+  } 
+  else if (q.type === 'identification') {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'blank-input';
+    input.placeholder = 'Type your answer...';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'off';
+    input.spellcheck = false;
+    input.oninput = (e) => {
+      selectedAnswer = e.target.value.trim();
+      document.getElementById('submitBtn').disabled = selectedAnswer.length === 0;
+    };
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter' && selectedAnswer) submitAnswer();
+    };
+    container.appendChild(input);
+    setTimeout(() => input.focus(), 150);
+  }
+
+  // Scroll quiz body to top
+  document.getElementById('quizBody').scrollTop = 0;
+
+  startTimer();
+}
+
+// ============================================================
+//  ⏱️ TIMER
+// ============================================================
+function startTimer() {
+  timeLeft = TIME_PER_QUESTION;
+  updateTimerDisplay();
+  clearInterval(timerInterval);
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    
+    if (timeLeft <= 5) document.getElementById('timer').classList.add('warning');
+    
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!answered) submitAnswer(true);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timer').textContent = `⏱ ${timeLeft}s`;
+  if (timeLeft > 5) document.getElementById('timer').classList.remove('warning');
+}
+
+// ============================================================
+//  👆 SELECTION
+// ============================================================
+function selectOption(index, el) {
+  if (answered) return;
+  selectedAnswer = index;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function selectTF(value, el) {
+  if (answered) return;
+  selectedAnswer = value;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('submitBtn').disabled = false;
+}
+
+// ============================================================
+//  ✓ SUBMIT
+// ============================================================
+window.submitAnswer = function(timeout = false) {
+  if (answered) return;
+  if (!timeout && selectedAnswer === null) return;
+  
+  answered = true;
+  clearInterval(timerInterval);
+  
+  const q = questions[currentQ];
+  let isCorrect = false;
+  let correctDisplay = '';
+  let yourDisplay = '';
+
+  if (q.type === 'multiple_choice') {
+    isCorrect = selectedAnswer === q.answer;
+    correctDisplay = q.options[q.answer];
+    yourDisplay = (selectedAnswer !== null && selectedAnswer !== undefined) 
+      ? q.options[selectedAnswer] 
+      : '(No answer)';
+
+    document.querySelectorAll('.option').forEach((opt, i) => {
+      opt.classList.add('disabled');
+      if (i === q.answer) opt.classList.add('correct');
+      if (i === selectedAnswer && i !== q.answer) opt.classList.add('wrong');
+    });
+  } 
+  else if (q.type === 'true_false') {
+    isCorrect = selectedAnswer === q.answer;
+    correctDisplay = q.answer ? 'TRUE' : 'FALSE';
+    yourDisplay = selectedAnswer !== null 
+      ? (selectedAnswer ? 'TRUE' : 'FALSE') 
+      : '(No answer)';
+
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+      btn.classList.add('disabled');
+      const btnVal = btn.dataset.val === 'true';
+      if (btnVal === q.answer) btn.classList.add('correct');
+      if (btnVal === selectedAnswer && btnVal !== q.answer) btn.classList.add('wrong');
+    });
+  } 
+  else if (q.type === 'identification') {
+    const userAns = (selectedAnswer || '').toString().toLowerCase().trim();
+    const correctAns = q.answer.toLowerCase().trim();
+    const acceptedList = (q.accepted || []).map(a => a.toLowerCase().trim());
+    
+    isCorrect = userAns === correctAns || acceptedList.includes(userAns);
+    correctDisplay = q.answer;
+    yourDisplay = selectedAnswer || '(No answer)';
+
+    const input = document.querySelector('.blank-input');
+    input.classList.add(isCorrect ? 'correct' : 'wrong');
+    input.disabled = true;
+  }
+
+  if (isCorrect) score++;
+  
+  userAnswers.push({
+    question: q.q,
+    type: q.type,
+    isCorrect,
+    correctAnswer: correctDisplay,
+    yourAnswer: yourDisplay
+  });
+
+  document.getElementById('submitBtn').style.display = 'none';
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = (currentQ === questions.length - 1) ? 'See Results 🎉' : 'Next →';
+};
+
+window.nextQuestion = function() {
+  currentQ++;
+  loadQuestion();
+};
+
+// ============================================================
+//  🎉 END
+// ============================================================
+function endQuiz() {
+  document.getElementById('progressFill').style.width = '100%';
+  showScreen('result-screen');
+
+  const total = questions.length;
+  const percent = Math.round((score / total) * 100);
+  
+  document.getElementById('resultName').textContent = `Player: ${playerName}`;
+  document.getElementById('finalScore').textContent = `${score}/${total}`;
+  document.getElementById('scorePercent').textContent = `${percent}%`;
+
+  let msg = '';
+  let trophy = '🎉';
+  if (percent === 100) { msg = '🏆 Perfect! Design Master ka!'; trophy = '🏆'; fireConfetti(); }
+  else if (percent >= 80) { msg = '🌟 Excellent! Magaling ka!'; trophy = '🌟'; }
+  else if (percent >= 60) { msg = '👍 Good job! Keep practicing!'; trophy = '👍'; }
+  else if (percent >= 40) { msg = '📚 Not bad! Review pa konti.'; trophy = '📚'; }
+  else { msg = '💪 Try again! Practice makes perfect.'; trophy = '💪'; }
+
+  document.getElementById('trophyIcon').textContent = trophy;
+  document.getElementById('resultMessage').textContent = msg;
+
+  saveScore(playerName, score, total, percent);
+}
+
+// ============================================================
+//  📖 REVIEW
+// ============================================================
+window.toggleReview = function() {
+  const section = document.getElementById('reviewSection');
+  const btn = document.getElementById('reviewBtn');
+  
+  if (section.style.display === 'none') {
+    section.innerHTML = userAnswers.map((a, i) => `
+      <div class="review-item ${a.isCorrect ? 'correct' : ''}">
+        <div class="review-q">${i + 1}. ${escapeHtml(a.question)}</div>
+        <div class="review-answer">
+          ${a.isCorrect 
+            ? `✅ <span class="correct-ans">Correct!</span>` 
+            : `❌ Your answer: <span class="your-ans">${escapeHtml(a.yourAnswer)}</span><br>
+               ✓ Correct: <span class="correct-ans">${escapeHtml(a.correctAnswer)}</span>`}
+        </div>
+      </div>
+    `).join('');
+    section.style.display = 'block';
+    btn.textContent = '📖 Hide Review';
+  } else {
+    section.style.display = 'none';
+    btn.textContent = '📖 Show Review';
+  }
+};
+
+// ============================================================
+//  💾 SAVE
+// ============================================================
+async function saveScore(name, score, total, percent) {
+  const msgEl = document.getElementById('savedMsg');
+  msgEl.textContent = '⏳ Saving...';
+  msgEl.className = 'saved-msg loading';
+
+  try {
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .insert([{ player_name: name, score, total, percent }]);
+
+    if (error) throw error;
+    msgEl.textContent = '✅ Score saved!';
+    msgEl.className = 'saved-msg success';
+  } catch (err) {
+    console.error('❌ Error:', err);
+    msgEl.textContent = `⚠️ Could not save: ${err.message}`;
+    msgEl.className = 'saved-msg error';
+  }
+}
+
+// ============================================================
+//  🏆 LEADERBOARD
+// ============================================================
+window.showLeaderboard = async function() {
+  showScreen('leaderboard-screen');
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<li>⏳ Loading...</li>';
+
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .order('score', { ascending: false })
+      .order('created_at', { ascending: true })
+      .limit(10);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<li>Wala pang scores. Ikaw ang mauna! 🎯</li>';
+      return;
+    }
+
+    list.innerHTML = data.map((row, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+      const topClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+      return `
+        <li class="${topClass}">
+          <span class="rank">${medal}</span>
+          <span class="lb-name">${escapeHtml(row.player_name)}</span>
+          <span class="lb-score">${row.score}/${row.total}</span>
+        </li>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = `<li style="color:#dc3545;">❌ Error: ${err.message}</li>`;
+  }
+};
+
+// ============================================================
+//  🎊 CONFETTI
+// ============================================================
+function fireConfetti() {
+  const colors = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444', '#fbbf24'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 5000);
+    }, i * 40);
+  }
+}
+
+// ============================================================
+//  🔒 HELPERS
+// ============================================================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>
